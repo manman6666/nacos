@@ -41,6 +41,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class NotifyTaskProcessor implements NacosTaskProcessor {
     
+    static final Logger LOGGER = LoggerFactory.getLogger(NotifyTaskProcessor.class);
+    
+    static final String URL_PATTERN =
+            "http://{0}{1}" + Constants.COMMUNICATION_CONTROLLER_PATH + "/dataChange" + "?dataId={2}&group={3}";
+    
+    final ServerMemberManager memberManager;
+    
     public NotifyTaskProcessor(ServerMemberManager memberManager) {
         this.memberManager = memberManager;
     }
@@ -71,42 +78,33 @@ public class NotifyTaskProcessor implements NacosTaskProcessor {
              In order to facilitate the system beta, without changing the notify.do interface,
              the new lastModifed parameter is passed through the Http header
              */
-            List<String> headers = Arrays
-                    .asList(NotifyService.NOTIFY_HEADER_LAST_MODIFIED, String.valueOf(lastModified),
-                            NotifyService.NOTIFY_HEADER_OP_HANDLE_IP, InetUtils.getSelfIP());
-            String urlString = MessageFormat
-                    .format(URL_PATTERN, serverIp, EnvUtil.getContextPath(), dataId, group);
+            List<String> headers = Arrays.asList(NotifyService.NOTIFY_HEADER_LAST_MODIFIED,
+                    String.valueOf(lastModified), NotifyService.NOTIFY_HEADER_OP_HANDLE_IP, InetUtils.getSelfIP());
+            String urlString = MessageFormat.format(URL_PATTERN, serverIp, EnvUtil.getContextPath(), dataId, group);
             
             RestResult<String> result = NotifyService.invokeURL(urlString, headers, Constants.ENCODE);
             if (result.ok()) {
                 ConfigTraceService.logNotifyEvent(dataId, group, tenant, null, lastModified, InetUtils.getSelfIP(),
-                        ConfigTraceService.NOTIFY_EVENT_OK, delayed, serverIp);
+                        ConfigTraceService.NOTIFY_EVENT, ConfigTraceService.NOTIFY_TYPE_OK, delayed, serverIp);
                 
                 MetricsMonitor.getNotifyRtTimer().record(delayed, TimeUnit.MILLISECONDS);
                 
                 return true;
             } else {
                 MetricsMonitor.getConfigNotifyException().increment();
-                LOGGER.error("[notify-error] {}, {}, to {}, result {}",
-                        new Object[] {dataId, group, serverIp, result.getCode()});
+                LOGGER.error("[notify-error] {}, {}, to {}, result {}", dataId, group, serverIp, result.getCode());
                 ConfigTraceService.logNotifyEvent(dataId, group, tenant, null, lastModified, InetUtils.getSelfIP(),
-                        ConfigTraceService.NOTIFY_EVENT_ERROR, delayed, serverIp);
+                        ConfigTraceService.NOTIFY_EVENT, ConfigTraceService.NOTIFY_TYPE_ERROR, delayed, serverIp);
                 return false;
             }
         } catch (Exception e) {
             MetricsMonitor.getConfigNotifyException().increment();
-            LOGGER.error("[notify-exception] " + dataId + ", " + group + ", to " + serverIp + ", " + e.toString());
-            LOGGER.debug("[notify-exception] " + dataId + ", " + group + ", to " + serverIp + ", " + e.toString(), e);
+            String message = "[notify-exception] " + dataId + ", " + group + ", to " + serverIp + ", " + e.toString();
+            LOGGER.error(message);
+            LOGGER.debug(message, e);
             ConfigTraceService.logNotifyEvent(dataId, group, tenant, null, lastModified, InetUtils.getSelfIP(),
-                    ConfigTraceService.NOTIFY_EVENT_EXCEPTION, delayed, serverIp);
+                    ConfigTraceService.NOTIFY_EVENT, ConfigTraceService.NOTIFY_TYPE_EXCEPTION, delayed, serverIp);
             return false;
         }
     }
-    
-    static final Logger LOGGER = LoggerFactory.getLogger(NotifyTaskProcessor.class);
-    
-    static final String URL_PATTERN =
-            "http://{0}{1}" + Constants.COMMUNICATION_CONTROLLER_PATH + "/dataChange" + "?dataId={2}&group={3}";
-    
-    final ServerMemberManager memberManager;
 }

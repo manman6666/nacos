@@ -71,15 +71,18 @@ public class GrpcConnection extends Connection {
     public Response request(Request request, long timeouts) throws NacosException {
         Payload grpcRequest = GrpcUtils.convert(request);
         ListenableFuture<Payload> requestFuture = grpcFutureServiceStub.request(grpcRequest);
-        Payload grpcResponse = null;
+        Payload grpcResponse;
         try {
-            grpcResponse = requestFuture.get(timeouts, TimeUnit.MILLISECONDS);
+            if (timeouts <= 0) {
+                grpcResponse = requestFuture.get();
+            } else {
+                grpcResponse = requestFuture.get(timeouts, TimeUnit.MILLISECONDS);
+            }
         } catch (Exception e) {
             throw new NacosException(NacosException.SERVER_ERROR, e);
         }
         
-        Response response = (Response) GrpcUtils.parse(grpcResponse);
-        return response;
+        return (Response) GrpcUtils.parse(grpcResponse);
     }
     
     @Override
@@ -159,9 +162,8 @@ public class GrpcConnection extends Connection {
             }
         }, requestCallBack.getExecutor() != null ? requestCallBack.getExecutor() : this.executor);
         // set timeout future.
-        ListenableFuture<Payload> payloadListenableFuture = Futures
-                .withTimeout(requestFuture, requestCallBack.getTimeout(), TimeUnit.MILLISECONDS,
-                        RpcScheduledExecutor.TIMEOUT_SCHEDULER);
+        ListenableFuture<Payload> payloadListenableFuture = Futures.withTimeout(requestFuture,
+                requestCallBack.getTimeout(), TimeUnit.MILLISECONDS, RpcScheduledExecutor.TIMEOUT_SCHEDULER);
         
     }
     

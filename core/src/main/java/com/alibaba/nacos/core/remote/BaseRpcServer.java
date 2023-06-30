@@ -16,10 +16,12 @@
 
 package com.alibaba.nacos.core.remote;
 
-import com.alibaba.nacos.api.remote.PayloadRegistry;
 import com.alibaba.nacos.common.remote.ConnectionType;
+import com.alibaba.nacos.common.remote.PayloadRegistry;
+import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.core.utils.Loggers;
 import com.alibaba.nacos.sys.env.EnvUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -36,30 +38,37 @@ public abstract class BaseRpcServer {
         PayloadRegistry.init();
     }
     
+    @Autowired
+    protected RpcServerTlsConfig rpcServerTlsConfig;
+    
     /**
      * Start sever.
      */
     @PostConstruct
     public void start() throws Exception {
         String serverName = getClass().getSimpleName();
-        Loggers.REMOTE.info("Nacos {} Rpc server starting at port {}", serverName, getServicePort());
+        String tlsConfig = JacksonUtils.toJson(rpcServerTlsConfig);
+        Loggers.REMOTE.info("Nacos {} Rpc server starting at port {} and tls config:{}", serverName, getServicePort(),
+                tlsConfig);
         
         startServer();
         
-        Loggers.REMOTE.info("Nacos {} Rpc server started at port {}", serverName, getServicePort());
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                Loggers.REMOTE.info("Nacos {} Rpc server stopping", serverName);
-                try {
-                    BaseRpcServer.this.stopServer();
-                    Loggers.REMOTE.info("Nacos {} Rpc server stopped successfully...", serverName);
-                } catch (Exception e) {
-                    Loggers.REMOTE.error("Nacos {} Rpc server stopped fail...", serverName, e);
-                }
+        if (RpcServerSslContextRefresherHolder.getInstance() != null) {
+            RpcServerSslContextRefresherHolder.getInstance().refresh(this);
+        }
+        
+        Loggers.REMOTE.info("Nacos {} Rpc server started at port {} and tls config:{}", serverName, getServicePort(),
+                tlsConfig);
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Loggers.REMOTE.info("Nacos {} Rpc server stopping", serverName);
+            try {
+                BaseRpcServer.this.stopServer();
+                Loggers.REMOTE.info("Nacos {} Rpc server stopped successfully...", serverName);
+            } catch (Exception e) {
+                Loggers.REMOTE.error("Nacos {} Rpc server stopped fail...", serverName, e);
             }
-        });
-
+        }));
+        
     }
     
     /**
@@ -68,6 +77,19 @@ public abstract class BaseRpcServer {
      * @return connection type.
      */
     public abstract ConnectionType getConnectionType();
+    
+    public RpcServerTlsConfig getRpcServerTlsConfig() {
+        return rpcServerTlsConfig;
+    }
+    
+    public void setRpcServerTlsConfig(RpcServerTlsConfig rpcServerTlsConfig) {
+        this.rpcServerTlsConfig = rpcServerTlsConfig;
+    }
+    
+    /**
+     * reload ssl context.
+     */
+    public abstract void reloadSslContext();
     
     /**
      * Start sever.
@@ -106,5 +128,5 @@ public abstract class BaseRpcServer {
      */
     @PreDestroy
     public abstract void shutdownServer();
-
+    
 }
