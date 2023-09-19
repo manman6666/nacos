@@ -62,6 +62,7 @@ const I18N_CONF = {
     userList: 'User List',
     roleManagement: 'Role Management',
     privilegeManagement: 'Privilege Management',
+    consoleClosed: 'Console Closed',
   },
   Password: {
     passwordNotConsistent: 'The passwords are not consistent',
@@ -148,6 +149,9 @@ const I18N_CONF = {
     extendInfo: 'NodeMetaData',
     operation: 'Operation',
     leave: 'Leave',
+    leaveSucc: 'Leave successfully',
+    leaveFail: 'Leave failed',
+    leavePrompt: 'prompt',
     confirm: 'Confirm',
     confirmTxt: 'Confirm that you want to go offline this cluster node?',
   },

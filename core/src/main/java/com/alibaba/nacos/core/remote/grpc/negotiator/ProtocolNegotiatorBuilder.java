@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2020 Alibaba Group Holding Ltd.
+ * Copyright 1999-2023 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,26 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.core.remote;
+package com.alibaba.nacos.core.remote.grpc.negotiator;
 
 /**
- * ssl context refresher spi holder.
+ * Protocol negotiator builder.
  *
- * @author liuzunfei
- * @version $Id: RequestFilters.java, v 0.1 2023年03月17日 12:00 PM liuzunfei Exp $
+ * @author xiweng.yy
  */
-public interface SslContextChangeAware {
+public interface ProtocolNegotiatorBuilder {
     
     /**
-     * init rpc server ssl context.
+     * Build new ProtocolNegotiator.
      *
-     * @param baseRpcServer rpc server.
+     * @return ProtocolNegotiator, Nullable.
      */
-    void init(BaseRpcServer baseRpcServer);
+    NacosGrpcProtocolNegotiator build();
     
     /**
-     * do something on ssl context change.
+     * Builder type of ProtocolNegotiator.
+     *
+     * @return type
      */
-    void onSslContextChange();
-    
-    /**
-     * shutdown to clear context.
-     */
-    void shutdown();
+    String type();
 }

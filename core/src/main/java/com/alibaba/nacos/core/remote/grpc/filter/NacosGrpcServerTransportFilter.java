@@ -1,13 +1,5 @@
-package com.alibaba.nacos.core.remote;
-
-/**
- * ssl context refresher spi holder.
- *
- * @author liuzunfei
- * @version $Id: RequestFilters.java, v 0.1 2023年03月17日 12:00 PM liuzunfei Exp $
- */
 /*
- * Copyright 1999-2020 Alibaba Group Holding Ltd.
+ * Copyright 1999-2023 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,20 +14,26 @@ package com.alibaba.nacos.core.remote;
  * limitations under the License.
  */
 
-public interface RpcServerSslContextRefresher {
+package com.alibaba.nacos.core.remote.grpc.filter;
+
+import io.grpc.ServerTransportFilter;
+
+/**
+ * Nacos grpc server transport filter.
+ *
+ * @author xiweng.yy
+ */
+@SuppressWarnings("PMD.AbstractClassShouldStartWithAbstractNamingRule")
+public abstract class NacosGrpcServerTransportFilter extends ServerTransportFilter {
+    
+    public static final String SDK_FILTER = "SDK";
+    
+    public static final String CLUSTER_FILTER = "CLUSTER";
     
     /**
-     * listener current rpc server and do something on ssl context change.
+     * Get the type of Interceptor.
      *
-     * @param baseRpcServer rpc server.
-     * @return
+     * @return should be `CLUSTER` or `SDK`
      */
-    SslContextChangeAware refresh(BaseRpcServer baseRpcServer);
-    
-    /**
-     * refresher name.
-     *
-     * @return
-     */
-    String getName();
+    public abstract String type();
 }

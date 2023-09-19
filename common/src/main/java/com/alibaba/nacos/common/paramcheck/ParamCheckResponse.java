@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2018 Alibaba Group Holding Ltd.
+ * Copyright 1999-2023 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,32 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.config.server.service.dump.task;
-
-import com.alibaba.nacos.common.task.AbstractDelayTask;
+package com.alibaba.nacos.common.paramcheck;
 
 /**
- * Dump change task.
+ * The type Param check response.
  *
- * @author Nacos
- * @date 2020/7/5 12:19 PM
+ * @author zhuoguang
  */
-public class DumpChangeTask extends AbstractDelayTask {
+public class ParamCheckResponse {
     
-    @Override
-    public void merge(AbstractDelayTask task) {
+    private boolean success;
+    
+    private String message;
+    
+    public boolean isSuccess() {
+        return success;
     }
     
-    public static final String TASK_ID = "dumpChangeConfigTask";
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+    
+    public String getMessage() {
+        return message;
+    }
+    
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }
